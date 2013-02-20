@@ -2,6 +2,8 @@
 
 from copy import deepcopy
 from itertools import product
+from functools import reduce
+from operator import add
 
 """
 nfsm.py - Nondeterministic finite state machine.
@@ -161,17 +163,25 @@ class NFSM:
             quantifier = regex[end_index+1]
 
             if quantifier == "*":
-                # Kleene star. slot can appear zero or more times
+                # Kleene star. any combination of `chains` can appear zero or
+                # more times
                 for chain2 in self._parse_regex_part(regex[end_index+2:]):
                     for repeatnum in range(self.length+1):
-                        for chain1 in chains:
-                            yield self._copy_chain(chain1, repeat=repeatnum) + self._copy_chain(chain2)
+                        # chains from above may have multiple chains, and if we
+                        # are to repeat them we must take a cross product
+                        # because the repeated values could be any of the
+                        # possible chains.
+                        for chain1 in (reduce(add, c, []) for c in product(chains, repeat=repeatnum)):
+                            if len(chain1) + len(chain2) <= self.length: # it ain't getting any shorter
+                                yield self._copy_chain(chain1) + self._copy_chain(chain2)
                 return
             elif quantifier == "+":
+                # Same as above but repeatnum starts at 1
                 for chain2 in self._parse_regex_part(regex[end_index+2:]):
                     for repeatnum in range(1, self.length+1):
-                        for chain1 in chains:
-                            yield self._copy_chain(chain1, repeat=repeatnum) + self._copy_chain(chain2)
+                        for chain1 in (reduce(add, c, []) for c in product(chains, repeat=repeatnum)):
+                            if len(chain1) + len(chain2) <= self.length:
+                                yield self._copy_chain(chain1) + self._copy_chain(chain2)
                 return
             elif quantifier == "?":
                 for chain2 in self._parse_regex_part(regex[end_index+2:]):
@@ -202,6 +212,11 @@ class NFSM:
         times
         
         """
+        # You may think this method could just be replaced with python's
+        # copy.deepcopy, but deepcopy will keep references to identical
+        # objects, copying the object just once, and we want to copy
+        # everything. In other words, this method also has the hidden but
+        # necessary effect of decoupling some set references in some chains.
         if not isinstance(chain, list):
             raise ValueError("Given item is not a chain. Chains are lists")
         chaincopy = []
@@ -259,7 +274,7 @@ class NFSM:
         applied
 
         """
-        newobj = self.__class__(".*", self.length, self.alphabet)
+        newobj = self.__class__("", self.length, self.alphabet)
 
         newobj.chains = []
         for chain in self.chains:
