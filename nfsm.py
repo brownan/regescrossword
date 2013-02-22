@@ -4,6 +4,7 @@ from copy import deepcopy
 from itertools import product
 from functools import reduce
 from operator import add
+import io
 
 """
 nfsm.py - Nondeterministic finite state machine.
@@ -232,6 +233,7 @@ class NFSM:
         adjusted to be consistent with that data.
 
         """
+        charset = frozenset(charset)
         newchains = []
         for chain in self.chains:
             chain[index] &= charset
@@ -276,6 +278,11 @@ class NFSM:
         """
         newobj = self.__class__("", self.length, self.alphabet)
 
+        # The rest of this method could be implemented with deepcopy() and
+        # still function correctly, but deepcopy() runs quite a bit slower. The
+        # code below must make some assumptions that deepcopy() doesn't. I'm
+        # guessing it's probably that every item in the sets are immutable
+        # strings.
         newobj.chains = []
         for chain in self.chains:
             # Copy each set, but we need to make sure to keep aliased
@@ -296,3 +303,34 @@ class NFSM:
             newobj.chains.append(newchain)
 
         return newobj 
+
+    def __str__(self):
+        """Return normalized string representing this regex object.
+
+        """
+        out = []
+        for chain in self.chains:
+            chainstr = io.StringIO()
+            for slot in chain:
+                if slot == self.alphabet:
+                    chainstr.write(".")
+                elif len(slot) > 3 and len(self.alphabet - slot) == 1:
+                    # Missing one element
+                    missing = (self.alphabet - slot).pop()
+                    alphabet = "".join(sorted(self.alphabet))
+                    i = alphabet.index(missing)
+                    
+                    if i == 0:
+                        chainstr.write("[{0}-{1}]".format(alphabet[1],alphabet[-1]))
+                    elif i == len(alphabet)-1:
+                        chainstr.write("[{0}-{1}]".format(alphabet[0],alphabet[-2]))
+                    else:
+                        chainstr.write("[{0}-{1}{2}-{3}]".format(alphabet[0],alphabet[i],alphabet[i+1],alphabet[-1]))
+                elif len(slot) == 1:
+                    chainstr.write("".join(slot))
+                else:
+                    chainstr.write("[{0}]".format("".join(sorted(slot))))
+            out.append(chainstr.getvalue())
+
+        return "|\n".join(out)
+
