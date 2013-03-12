@@ -3,8 +3,6 @@
 import string
 import time
 
-from IPython import embed
-
 from nfsm import NFSM
 from hexgrid import HexGrid
 
