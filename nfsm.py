@@ -20,7 +20,7 @@ class NFSM:
     of possible characters from the alphabet that could possibly belong in the
     slot given the constraints.
 
-    This doesn't support full regular expression syntax. Non-exausted list of
+    This doesn't support full regular expression syntax. Non-exhaustive list of
     things that are not supported and will result in undefined behavior:
     * Only a single level of parenthesis allowed. No nesting.
     * A reference to a group that may or may not be matched under all
