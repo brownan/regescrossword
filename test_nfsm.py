@@ -209,6 +209,12 @@ class TestGroups(TestNFSMBase):
         for chain in r.chains:
             self.assertIs(chain[0], chain[1])
 
+    def test_star_reference(self):
+        r = NFSM("(.)\\1*", 3, "ABC")
+        for chain in r.chains:
+            self.assertIs(chain[0], chain[1])
+            self.assertIs(chain[1], chain[2])
+
     def test_group_2nd_pos(self):
         r = NFSM("A(.)B\\1", 4, "ABC")
         self.assertIn([set("A"), set("ABC"), set("B"), set("ABC")], r.chains)

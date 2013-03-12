@@ -24,7 +24,7 @@ class NFSM:
     things that are not supported and will result in undefined behavior:
     * Only a single level of parenthesis allowed. No nesting.
     * A reference to a group that may or may not be matched under all
-      circumstances
+      circumstances e.g. (A)?\1
     * A group that is quantified or repeated
     * A reference to a forward group or a reference to a group from within the
       group
