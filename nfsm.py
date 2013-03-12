@@ -25,9 +25,11 @@ class NFSM:
     * Only a single level of parenthesis allowed. No nesting.
     * A reference to a group that may or may not be matched under all
       circumstances e.g. (A)?\1
-    * A group that is quantified or repeated
+    * A group that is quantified or repeated. e.g. (A)+\1
     * A reference to a forward group or a reference to a group from within the
-      group
+      group. e.g. \1(A) (A\2)
+    (I'm not sure what would happen in a more compliant regex implementation
+    anyways)
 
     """
     def __init__(self, regex, length, alphabet):
